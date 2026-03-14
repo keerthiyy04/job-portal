@@ -11,18 +11,21 @@ https://docs.djangoproject.com/en/6.0/ref/settings/
 """
 from pathlib import Path
 from datetime import timedelta
+import os
 
 # =====================
-# BASE DIR
+# BASE DIRECTORY
 # =====================
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 # =====================
 # SECURITY
 # =====================
-SECRET_KEY = 'django-insecure-5-dl)41=zccm815mg02%nvt&0)4!cuu_*vvz92v&%xi#+dz!37'
-DEBUG = True
-ALLOWED_HOSTS = ["*"]  # For development only
+SECRET_KEY = os.environ.get("DJANGO_SECRET_KEY", "unsafe-secret-key")
+
+DEBUG = os.environ.get("DEBUG", "True") == "True"
+
+ALLOWED_HOSTS = ["localhost", "127.0.0.1"]
 
 # =====================
 # APPLICATIONS
@@ -34,21 +37,26 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'django.contrib.sites',
 
+    # Third-party apps
     'corsheaders',
     'rest_framework',
     'rest_framework_simplejwt',
+    'dj_rest_auth',
 
+    # Local apps
     'accounts',
     'jobs',
 ]
 
+SITE_ID = 1
 
 # =====================
 # MIDDLEWARE
 # =====================
 MIDDLEWARE = [
-    'corsheaders.middleware.CorsMiddleware',  # Must be first
+    'corsheaders.middleware.CorsMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -59,7 +67,7 @@ MIDDLEWARE = [
 ]
 
 # =====================
-# URLS / TEMPLATES
+# URL CONFIG
 # =====================
 ROOT_URLCONF = 'backend.urls'
 
@@ -105,7 +113,7 @@ AUTH_PASSWORD_VALIDATORS = [
 # INTERNATIONALIZATION
 # =====================
 LANGUAGE_CODE = 'en-us'
-TIME_ZONE = 'UTC'
+TIME_ZONE = 'Asia/Kolkata'
 USE_I18N = True
 USE_TZ = True
 
@@ -113,6 +121,8 @@ USE_TZ = True
 # STATIC & MEDIA
 # =====================
 STATIC_URL = '/static/'
+STATIC_ROOT = BASE_DIR / 'staticfiles'
+
 MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
 
@@ -122,25 +132,31 @@ MEDIA_ROOT = BASE_DIR / 'media'
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 # =====================
-# CORS
+# CORS SETTINGS
 # =====================
-CORS_ALLOW_ALL_ORIGINS = True  # Development only
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:3000",
 ]
 
+CSRF_TRUSTED_ORIGINS = [
+    "http://localhost:3000",
+]
+
 # =====================
-# REST FRAMEWORK + JWT
+# REST FRAMEWORK
 # =====================
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': (
         'rest_framework_simplejwt.authentication.JWTAuthentication',
     ),
     'DEFAULT_PERMISSION_CLASSES': (
-        'rest_framework.permissions.IsAuthenticated',  # Default authenticated
+        'rest_framework.permissions.AllowAny',
     ),
 }
 
+# =====================
+# JWT SETTINGS
+# =====================
 SIMPLE_JWT = {
     'ACCESS_TOKEN_LIFETIME': timedelta(minutes=60),
     'REFRESH_TOKEN_LIFETIME': timedelta(days=1),
@@ -153,8 +169,24 @@ SIMPLE_JWT = {
 AUTH_USER_MODEL = 'accounts.User'
 
 # =====================
-# AUTHENTICATION BACKEND
+# AUTHENTICATION BACKENDS
 # =====================
 AUTHENTICATION_BACKENDS = [
-    'django.contrib.auth.backends.ModelBackend',  # Default backend
+    'django.contrib.auth.backends.ModelBackend',
 ]
+
+# =====================
+# DJ-REST-AUTH (JWT ONLY)
+# =====================
+REST_AUTH = {
+    'USE_JWT': True,
+    'JWT_AUTH_COOKIE': None,
+    'TOKEN_MODEL': None,
+}
+
+# =====================
+# EXTRA SECURITY (Production Ready)
+# =====================
+SECURE_BROWSER_XSS_FILTER = True
+SECURE_CONTENT_TYPE_NOSNIFF = True
+X_FRAME_OPTIONS = "DENY"
